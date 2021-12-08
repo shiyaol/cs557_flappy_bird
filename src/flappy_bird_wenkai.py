@@ -38,10 +38,10 @@ class Pipe(object):
 
 
 class FlappyBird():
-
+    init()
     def __init__(self):
 
-        init()
+
         self.fps_clock = time.Clock()
         self.screen_width = 288
         self.screen_height = 512
@@ -76,6 +76,8 @@ class FlappyBird():
         self.pipe_width = self.pipes[0].get_width()
         self.pipe_height = self.pipes[0].get_height()
         # set up for the first 2 pipe
+        self.pipes[0].set_x_y(self.screen_width, self.base_y, self.pipe_height)
+        self.pipes[1].set_x_y(self.screen_width, self.base_y, self.pipe_height)
         self.pipes[0].x_upper = self.pipes[0].x_lower = self.screen_width
         self.pipes[1].x_upper = self.pipes[1].x_lower = self.screen_width * 1.5
 
@@ -99,7 +101,7 @@ class FlappyBird():
                 Rect(pipe.x_upper, pipe.y_upper, self.pipe_width, self.pipe_height))
             pipe_coll.append(
                 Rect(pipe.x_lower, pipe.y_lower, self.pipe_width, self.pipe_height))
-             Check if the bird's bounding box overlaps to the bounding box of any pipe
+             #Check if the bird's bounding box overlaps to the bounding box of any pipe
             if bird_rect.collidelist(pipe_coll) == -1:
                 return False
             for i in range(2):
@@ -192,7 +194,7 @@ class FlappyBird():
         self.base_x = -((100-self.base_x) % self.base_shift)
 
         self.update_bird_pos()
-
+        self.update_pipe()
         # if collided we need to restart
         if self.is_collided():
             terminal = True
