@@ -1,5 +1,6 @@
 import argparse
 import os
+os.environ["SDL_VIDEODRIVER"] = "dummy"
 import shutil
 from random import random, randint, sample
 import numpy as np
@@ -10,7 +11,7 @@ from src.flappy_bird import FlappyBird
 from src.utils import pre_processing
 import cv2
 import os
-os.environ["SDL_VIDEODRIVER"] = "dummy"
+
 
 image_size = 84
 batch_size = 32
