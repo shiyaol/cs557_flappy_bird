@@ -5,7 +5,7 @@ from random import random, randint, sample
 import numpy as np
 import torch
 import torch.nn as nn
-from src.deep_q_network import DeepQNetwork
+from src.deep_q_shiyao import DeepQNetwork
 from src.flappy_bird import FlappyBird
 from src.utils import pre_processing
 import cv2
@@ -16,7 +16,7 @@ image_size = 84
 batch_size = 32
 learning_rate = 1e-6
 gamma = 0.99
-iter_num = 2000000
+iter_num = 200
 memo_size = 50000
 log_path = "tensorboard"
 model_path = "trained_models"
