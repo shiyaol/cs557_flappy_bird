@@ -12,7 +12,7 @@ class Pipe(object):
     def __init__(self):
         self.pipe_images = [rotate(load('assets/sprites/pipe-green.png').convert_alpha(), 180),
                             load('assets/sprites/pipe-green.png').convert_alpha()]
-        self.pipe_hitmask = [pixels_alpha(image).astype(bool)
+        self.pipe_images_mask = [pixels_alpha(image).astype(bool)
                              for image in self.pipe_images]
         self.pipe_gap_size = 100
         self.pipe_velocity_x = -4
@@ -46,7 +46,7 @@ class FlappyBird():
         self.screen_width = 288
         self.screen_height = 512
         self.screen = display.set_mode((self.screen_width, self.screen_height))
-        display.set_caption('Deep Q-Network Flappy Bird')
+        display.set_caption('Flappy Bird Demo created by Wenkai and Shiyao')
         self.base_image = load('assets/sprites/base.png').convert_alpha()
         self.background_image = load('assets/sprites/background-black.png').convert()
 
@@ -54,9 +54,9 @@ class FlappyBird():
                             load('assets/sprites/redbird-midflap.png').convert_alpha(),
                             load('assets/sprites/redbird-downflap.png').convert_alpha()]
 
-        self.bird_hitmask = [pixels_alpha(image).astype(bool)
+        self.bird_images_mask = [pixels_alpha(image).astype(bool)
                              for image in self.bird_images]
-        # pipe_hitmask = [pixels_alpha(image).astype(bool) for image in pipe_images]
+        # pipe_images_mask = [pixels_alpha(image).astype(bool) for image in pipe_images]
         self.bird_index_generator = cycle([0, 1, 2, 1])
         self.iter = self.bird_index = self.score = 0
 
@@ -83,7 +83,7 @@ class FlappyBird():
         self.max_velocity_y = 10
         self.downward_speed = 1
         self.upward_speed = -9
-        self.is_flapped = False
+        self.flapped = False
 
         self.fps = 30
 
@@ -91,81 +91,74 @@ class FlappyBird():
         # Check if the bird touch ground
         if self.bird_height + self.bird_y + 1 >= self.base_y:
             return True
-        bird_bbox = Rect(self.bird_x, self.bird_y,
+        bird_rect = Rect(self.bird_x, self.bird_y,
                          self.bird_width, self.bird_height)
-        pipe_boxes = []
+        pipe_coll = []
         for pipe in self.pipes:
-            pipe_boxes.append(
+            pipe_coll.append(
                 Rect(pipe.x_upper, pipe.y_upper, self.pipe_width, self.pipe_height))
-            pipe_boxes.append(
+            pipe_coll.append(
                 Rect(pipe.x_lower, pipe.y_lower, self.pipe_width, self.pipe_height))
-            # Check if the bird's bounding box overlaps to the bounding box of any pipe
-            if bird_bbox.collidelist(pipe_boxes) == -1:
+             Check if the bird's bounding box overlaps to the bounding box of any pipe
+            if bird_rect.collidelist(pipe_coll) == -1:
                 return False
             for i in range(2):
-                cropped_bbox = bird_bbox.clip(pipe_boxes[i])
-                min_x1 = cropped_bbox.x - bird_bbox.x
-                min_y1 = cropped_bbox.y - bird_bbox.y
-                min_x2 = cropped_bbox.x - pipe_boxes[i].x
-                min_y2 = cropped_bbox.y - pipe_boxes[i].y
-                if np.any(self.bird_hitmask[self.bird_index][min_x1:min_x1 + cropped_bbox.width,
-                          min_y1:min_y1 + cropped_bbox.height] * pipe.pipe_hitmask[i][
-                                                                 min_x2:min_x2 + cropped_bbox.width,
-                                                                 min_y2:min_y2 + cropped_bbox.height]):
+                rect = bird_rect.clip(pipe_coll[i])
+                start_x1 = rect.x - bird_rect.x
+                end_x1 = start_x1 + rect.width
+                
+                start_y1 = rect.y - bird_rect.y
+                end_y1 = start_y1 + rect.height
+                
+                start_x2 = rect.x - pipe_coll[i].x
+                end_x2 = start_x2 + rect.width
+                
+                start_y2 = rect.y - pipe_coll[i].y
+                end_y2 = start_y2 + rect.height
+
+                if np.any(self.bird_images_mask[self.bird_index][start_x1:end_x1,start_y1:end_y1] * pipe.pipe_images_mask[i][
+                                                                 start_x2:end_x2,
+                                                                 start_y2:end_y2]):
                     return True
         return False
 
-    def next_frame(self, action):
-        pump()
-        reward = 0.1
-        terminal = False
-        # Check input action
-        if action == 1:
-            self.current_velocity_y = self.upward_speed
-            self.is_flapped = True
-
-        # Update score
+    def update_score(self):
         bird_center_x = self.bird_x + self.bird_width / 2
         for pipe in self.pipes:
             pipe_center_x = pipe.x_upper + self.pipe_width / 2
-            if pipe_center_x < bird_center_x < pipe_center_x + 5:
+            if pipe_center_x < bird_center_x and bird_center_x < pipe_center_x + 5:
                 self.score += 1
                 reward = 1
                 break
-
-        # Update index and iteration
-        if (self.iter + 1) % 3 == 0:
-            self.bird_index = next(self.bird_index_generator)
-            self.iter = 0
-        self.base_x = -((-self.base_x + 100) % self.base_shift)
-
+    
+    def update_bird_pos(self):
         # Update bird's position
-        if self.current_velocity_y < self.max_velocity_y and not self.is_flapped:
+        if not self.flapped and self.current_velocity_y < self.max_velocity_y:
             self.current_velocity_y += self.downward_speed
-        if self.is_flapped:
-            self.is_flapped = False
+       
         self.bird_y += min(self.current_velocity_y, self.bird_y -
                            self.current_velocity_y - self.bird_height)
+
+        if self.flapped:
+            self.flapped = False   
+
         if self.bird_y < 0:
             self.bird_y = 0
-
+    
+    def update_pipe(self):
         # Update pipes' position
         for pipe in self.pipes:
             pipe.x_upper += pipe.pipe_velocity_x
             pipe.x_lower += pipe.pipe_velocity_x
         # Update pipes
-        if 0 < self.pipes[0].x_lower < 5:
+        if 0 < self.pipes[0].x_lower and self.pipes[0].x_lower < 5:
             new_pipe = Pipe()
             new_pipe.set_x_y(self.screen_width, self.base_y, self.pipe_height)
             self.pipes.append(new_pipe)
-        if self.pipes[0].x_lower < -self.pipe_width:
+        if self.pipes[0].x_lower < 0 - self.pipe_width:
             del self.pipes[0]
-        if self.is_collided():
-            terminal = True
-            reward = -1
-            self.__init__()
 
-        # Draw everything
+    def draw_image(self):
         self.screen.blit(self.background_image, (0, 0))
         self.screen.blit(self.base_image, (self.base_x, self.base_y))
         self.screen.blit(
@@ -178,4 +171,34 @@ class FlappyBird():
         image = array3d(display.get_surface())
         display.update()
         self.fps_clock.tick(self.fps)
+        return image
+
+        
+    def next_frame(self, action):
+        pump()
+        reward = 0.1
+        terminal = False
+        self.update_score()
+        # Check input action
+        if action == 1:
+            self.flapped = True
+            self.current_velocity_y = self.upward_speed
+
+
+        # Update index and iteration
+        if (self.iter + 1) % 3 == 0:
+            self.bird_index = next(self.bird_index_generator)
+            self.iter = 0
+        self.base_x = -((100-self.base_x) % self.base_shift)
+
+        self.update_bird_pos()
+
+        # if collided we need to restart
+        if self.is_collided():
+            terminal = True
+            reward = -1
+            self.__init__()
+
+        # Draw everything on pygame
+        image = self.draw_image()
         return image, reward, terminal
