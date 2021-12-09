@@ -21,7 +21,7 @@ iter_num = 2000000
 memo_size = 50000
 log_path = "tensorboard"
 model_path = "trained_models"
-
+file = open("score.txt", "w") 
 def pre_processing(image, width, height):
     gray_image = cv2.cvtColor(cv2.resize(image, (width, height)), cv2.COLOR_BGR2GRAY)
     _, bin_image = cv2.threshold(gray_image, 1, 255, cv2.THRESH_BINARY)
@@ -36,6 +36,7 @@ def train_agent(iter_num = iter_num, im_size = image_size, b_size = batch_size, 
     loss_function = nn.MSELoss()
     game_state = FlappyBird()
     image, reward, terminal = game_state.next_frame(0)
+    file.write(str(game_state.score) + '\n')
     image = pre_processing(image[:game_state.screen_width, :int(game_state.base_y)], im_size, im_size)
     image = torch.from_numpy(image)
     state = torch.cat(tuple(image for _ in range(4)))[None, :, :, :]
@@ -56,6 +57,7 @@ def train_agent(iter_num = iter_num, im_size = image_size, b_size = batch_size, 
             action = torch.argmax(prediction)
             
         next_frame_image, reward, terminal = game_state.next_frame(action)
+        file.write(str(game_state.score) + '\n')
         next_frame_image = torch.from_numpy(pre_processing(next_frame_image[:game_state.screen_width, :int(game_state.base_y)], im_size, im_size))
 
         train_image = torch.cat((state[0, 1:, :, :], next_frame_image))[None, :, :, :]
@@ -97,3 +99,4 @@ def train_agent(iter_num = iter_num, im_size = image_size, b_size = batch_size, 
     torch.save(model, "{}/flappy_bird_final_v7".format(m_path))
 
 train_agent()
+file.close()
