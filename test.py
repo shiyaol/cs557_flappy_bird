@@ -23,7 +23,7 @@ def test_flap(opt):
     else:
         torch.manual_seed(123)
 
-    model = torch.load("{}/flappy_bird_v2".format(opt.saved_path), map_location=lambda storage, loc: storage)
+    model = torch.load("{}/flappy_bird_final_newnn".format(opt.saved_path), map_location=lambda storage, loc: storage)
     model.eval()
     game_state = FlappyBird()
     image, reward, terminal = game_state.next_frame(0)
