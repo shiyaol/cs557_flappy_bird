@@ -6,7 +6,7 @@ from random import random, randint, sample
 import numpy as np
 import torch
 import torch.nn as nn
-from src.deep_q_network import DeepQNetwork
+from src.deep_q_shiyao import DeepQNetwork
 from src.flappy_bird import FlappyBird
 from src.utils import pre_processing
 import cv2
@@ -93,10 +93,20 @@ def train_agent(iter_num = iter_num, im_size = image_size, b_size = batch_size, 
 
         print("Iteration: {}/{}, Action: {}, Loss: {}, Reward: {}, Q-value: {}".format(iter, iter_num, action, loss, reward, torch.max(prediction)))
 
-        if (iter+1) % 1000000 == 0:
-            torch.save(model, "{}/flappy_bird_{}".format(m_path, iter+1))
+        if iter == 100:
+            torch.save(model, "{}/flappy_bird_newnn_{}".format(m_path, iter))
+        if iter == 1000:
+            torch.save(model, "{}/flappy_bird_newnn_{}".format(m_path, iter))
+        if iter == 10000:
+            torch.save(model, "{}/flappy_bird_newnn_{}".format(m_path, iter))
+        if iter == 100000:
+            torch.save(model, "{}/flappy_bird_newnn_{}".format(m_path, iter))
+        if iter == 1000000:
+            torch.save(model, "{}/flappy_bird_newnn_{}".format(m_path, iter))
+        if iter == 2000000:
+            torch.save(model, "{}/flappy_bird_newnn_{}".format(m_path, iter))
 
-    torch.save(model, "{}/flappy_bird_final_v7".format(m_path))
+    torch.save(model, "{}/flappy_bird_final_newnn".format(m_path))
 
 train_agent()
 file.close()
