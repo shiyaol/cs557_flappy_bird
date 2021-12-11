@@ -111,12 +111,6 @@ class FlappyBird():
                 self.score += 1
                 reward = 1
                 break
-
-
-
-
-
-
         # Update index and iteration
         if (self.iter + 1) % 3 == 0:
             self.bird_index = next(self.bird_index_generator)

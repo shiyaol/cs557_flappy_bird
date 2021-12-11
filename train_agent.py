@@ -36,6 +36,7 @@ def train_agent(iter_num = iter_num, im_size = image_size, b_size = batch_size, 
     loss_function = nn.MSELoss()
     game_state = FlappyBird()
     image, reward, terminal = game_state.next_frame(0)
+    print(reward)
     file.write(str(game_state.score) + '\n')
     image = pre_processing(image[:game_state.screen_width, :int(game_state.base_y)], im_size, im_size)
     image = torch.from_numpy(image)
@@ -57,6 +58,7 @@ def train_agent(iter_num = iter_num, im_size = image_size, b_size = batch_size, 
             action = torch.argmax(prediction)
             
         next_frame_image, reward, terminal = game_state.next_frame(action)
+        print(reward)
         file.write(str(game_state.score) + '\n')
         next_frame_image = torch.from_numpy(pre_processing(next_frame_image[:game_state.screen_width, :int(game_state.base_y)], im_size, im_size))
 
